@@ -112,6 +112,8 @@ server <- function(input, output) {
       sample_th <- sample > sample_bg + input$offset
       nmask <- watershed(distmap(sample_th), 1)
       nmask <- bwlabel(nmask)
+      rm(sample_bg)
+      rm(sample_th)
       progress$set(value = .5, message = "counting cells")
       nmask2 <- list()
       for(i in seq.int(numberOfFrames(nmask, type="render"))){
@@ -125,6 +127,8 @@ server <- function(input, output) {
                              col = c(ifelse(input$channel=="red", "green", "red"), NA), 
                              closed = TRUE)
       rm(img)
+      rm(nmask)
+      gc(reset=TRUE)
       sample2 <- list()
       progress$set(value = .7, message = "labeling cells")
       for(i in seq.int(numberOfFrames(nmask2, type="render"))){
@@ -176,8 +180,8 @@ server <- function(input, output) {
       }
       sample <- combine(sample2)
       rm(sample2)
-      rm(nmask)
       rm(nmask2)
+      gc(reset=TRUE)
       # Close the progress when this reactive exits (even if there's an error)
       on.exit(progress$close())
       progress$set(value = .9, message = "render image")
