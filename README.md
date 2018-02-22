@@ -12,9 +12,7 @@ runGitHub("cellCounter", "jianhong")
 
 ### local R
 
-library(devtools)
-
-install_github("jianhong/cellCounter")
+source("https://raw.githubusercontent.com/jianhong/cellCounter/master/cellCounter.R")
 
 library(EBImage)
 
