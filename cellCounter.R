@@ -64,7 +64,9 @@ readFile <- function(file, channel){
 }
 
 detectCells <- function(img, offset, cellSizeRange, size=31, tolerance=1, ext=1, ...){
-  stopifnot(file.exists(file))
+  stopifnot(is(img, "Image"))
+  stopifnot(offset<1)
+  stopifnot(offset>0)
   stopifnot(length(cellSizeRange)==2)
   stopifnot(is.numeric(cellSizeRange))
   disc <- makeBrush(size, shape="disc")
