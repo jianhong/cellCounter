@@ -39,7 +39,7 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
   for(fun in adjustPipeline){
     stopifnot(is.function(fun))
     img <- fun(img=img, ...)
-  } 
+  }
   ## detect the cells
   if(!silence) message("detecting cells")
   img <- detectCells(img, offset=offset, cellSizeRange=cellSizeRange, ...)
@@ -125,7 +125,7 @@ saveCountXML <- function(nmask, xmlfile="cellCounter.xml", file, distance=10, co
     xml$addNode("Image_Filename", file)
   xml$closeTag()
   xml$addNode("Marker_Data", close = FALSE)
-    xml$addNode("Current_type", 1)
+    xml$addNode("Current_Type", 1)
     for(type in seq.int(8)){
       xml$addNode("Marker_Type", close = FALSE)
       xml$addNode("Type", type)
