@@ -22,4 +22,4 @@ library(XML)
 
 cellCounter(file.path("inst", "extdata", "sample.tiff"), xmlfile="sample.xml", imageFilename="sample.czi")
 
-[youtube](https://youtu.be/-SJJ2UTV7A0)
+[youtube tutorial](https://youtu.be/UUWOd5ys8ZY)
