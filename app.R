@@ -16,10 +16,24 @@ if(!"DT" %in% rownames(installed.packages())){
   source("https://bioconductor.org/biocLite.R")
   biocLite("DT", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
 }
-
+if(!"scales" %in% rownames(installed.packages())){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("scales", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+}
+if(!"XML" %in% rownames(installed.packages())){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("XML", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+}
+# if(!"shinyjs" %in% rownames(installed.packages())){
+#   source("https://bioconductor.org/biocLite.R")
+#   biocLite("shinyjs", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+# }
 library(shiny)
+#library(shinyjs)
 library(EBImage)
 library(DT)
+library(scales)
+library(XML)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -67,7 +81,27 @@ ui <- fluidPage(
                      choiceNames = c("red", "green", "blue"),
                      choiceValues = c("red", "green", "blue"),
                      selected = "green"),
-        submitButton("recount", icon("refresh"))
+        checkboxInput("reLevel",
+                      "re-level the image to increase the contrast",
+                      value = TRUE),
+        radioButtons("GaussianBlur",
+                     "apply Gaussian blur before/after re-level",
+                     choiceNames = c("No", "before", "after"),
+                     choiceValues = c("No", "before", "after"),
+                     selected = "No"),
+        sliderInput("blurLevel",
+                    "sigma value of Gaussian blur",
+                    min = 0,
+                    max = 20,
+                    value = 2,
+                    step = .1),
+        radioButtons("outputXML",
+                      "output to XML or labeling in figure",
+                     choiceNames = c("XML", "numberLabeling"),
+                     choiceValues = c("XML", "numberLabeling"),
+                     selected = "XML"),
+        submitButton("recount", icon("refresh")),
+        downloadButton("downloadData", "Download", "disabled")
       ),
       
       # Show a plot of the generated distribution
@@ -86,6 +120,7 @@ server <- function(input, output) {
   cnt_tbl <- data.frame()
   tbl.old <- NULL
   output$outputviewer <- EBImage::renderDisplay({
+    write.table("", file = "cellCounter.xml")
     if(!is.null(input$f)){
       # Create a Progress object
       progress <- shiny::Progress$new()
@@ -103,7 +138,17 @@ server <- function(input, output) {
         }
       }
       
-      progress$set(message = "detectings cells", value = .2)
+      progress$set(message = "adjust image", value = .2)
+      if(input$GaussianBlur=="before"){
+        img <- gblur(img, sigma = input$blurLevel)
+      }
+      if(input$reLevel){
+        imageData(img) <- rescale(imageData(img), to=c(0, 1))
+      }
+      if(input$GaussianBlur=="after"){
+        img <- gblur(img, sigma = input$blurLevel)
+      }
+      progress$set(message = "detectings cells", value = .3)
       sample <- channel(img, input$channel)
       
       disc <- makeBrush(31, "disc")
@@ -129,57 +174,125 @@ server <- function(input, output) {
       rm(img)
       rm(nmask)
       gc(reset=TRUE)
-      sample2 <- list()
-      progress$set(value = .7, message = "labeling cells")
-      for(i in seq.int(numberOfFrames(nmask2, type="render"))){
-        tbl.new <- computeFeatures.moment(getFrame(nmask2, i, type="render"))
-        if(length(tbl.new)>0){
-          tbl.new <- cbind(tbl.new, counts=rep(0, nrow(tbl.new)))
-          if(length(tbl.old)>0){
-            countsInLastFrame <- 0
-            for(m in seq.int(nrow(tbl.new))){
-              for(n in seq.int(nrow(tbl.old))){
-                if(euc.dist(tbl.new[m, c("m.cx", "m.cy")], tbl.old[n, c("m.cx", "m.cy")]) < input$distance){
-                  countsInLastFrame <- countsInLastFrame + 1
-                  tbl.new[m, "counts"] <- tbl.old[n, "counts"]
-                  next
+      if(input$outputXML=="XML"){
+        progress$set(value = .7, message = "generate xml file")
+        xml <- xmlTree()
+        xml$addTag("CellCounter_Marker_File", close = FALSE)
+        xml$addTag("Image_Properties", close = FALSE)
+        xml$addTag("Image_Filename", input$f$name)
+        xml$closeTag()
+        xml$addTag("Marker_Data", close = FALSE)
+        xml$addTag("Current_type", 3)
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 1)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 2)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 3)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 4)
+        for(i in seq.int(numberOfFrames(nmask2, type="render"))){
+          tbl.new <- computeFeatures.moment(getFrame(nmask2, i, type="render"))
+          if(length(tbl.new)>0){
+            checklist <- rep(TRUE, nrow(tbl.new))
+            if(length(tbl.old)>0){
+              for(m in seq.int(nrow(tbl.new))){
+                for(n in seq.int(nrow(tbl.old))){
+                  if(euc.dist(tbl.new[m, c("m.cx", "m.cy")], tbl.old[n, c("m.cx", "m.cy")]) < input$distance){
+                    checklist[m] <- FALSE
+                    next
+                  }
                 }
               }
-            } 
-            counts <- nrow(tbl.new) - countsInLastFrame
-          }else{
-            countsInLastFrame <- 0
-            counts <- nrow(tbl.new)
+            }
+            
+            for(m in seq_along(checklist)){
+              if(checklist[m]){
+                xml$addTag("Marker", close = FALSE)
+                xml$addTag("MarkerX", round(tbl.new[m, "m.cx"]))
+                xml$addTag("MarkerY", round(tbl.new[m, "m.cy"]))
+                xml$addTag("MarkerZ", i)
+                xml$closeTag()
+              }
+            }
           }
-          lastCount <- ifelse(nrow(cnt_tbl)>0, cnt_tbl[nrow(cnt_tbl), "cumsum"], 0)
-          if(sum(tbl.new[, "counts"]==0)>0){
-            tbl.new[tbl.new[, "counts"]==0, "counts"] <- seq.int(sum(tbl.new[, "counts"]==0)) + lastCount
-          }
-          cnt_tbl <- rbind(cnt_tbl, 
-                           data.frame(frame  = i,
-                                      counts = counts,
-                                      countsInLastFrame = countsInLastFrame,
-                                      cumsum = lastCount + counts,
-                                      x      = paste(round(tbl.new[, "m.cx"], digits = 1), collapse = ";"), 
-                                      y      = paste(round(tbl.new[, "m.cy"], digits = 1), collapse = ";")))
           tbl.old <- tbl.new
-          ## paste number
-          tmpfile <- tempfile()
-          png(filename = tmpfile, width = nrow(sample), height = ncol(sample))
-          display(getFrame(sample, i, type="render"), method = "raster")
-          text(tbl.new[, "m.cx"], tbl.new[, "m.cy"], 
-               labels = tbl.new[, "counts"], 
-               col = ifelse(tbl.new[, "counts"]>lastCount, "orange", "white"))
-          dev.off()
-          sample2[[i]] <- readImage(tmpfile, type = "png")[, , 1:3]
-          unlink(tmpfile)
-        }else{
-          sample2[[i]] <- getFrame(sample, i, type="render")
+          progress$set(value = .7 + .2*i/numberOfFrames(nmask2, type="render"), detail = paste("frame", i))
         }
-        progress$set(value = .7 + .2*i/numberOfFrames(nmask2, type="render"), detail = paste("frame", i))
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 5)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 6)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 7)
+        xml$closeTag()
+        xml$addTag("Marker_Type", close = FALSE)
+        xml$addTag("Type", 8)
+        xml$closeTag()
+        xml$closeTag()
+        xml$closeTag()
+        saveXML(xml, file = "cellCounter.xml")
+        #removeClass("downloadData", "disabled")
+      }else{
+        sample2 <- list()
+        progress$set(value = .7, message = "labeling cells")
+        for(i in seq.int(numberOfFrames(nmask2, type="render"))){
+          tbl.new <- computeFeatures.moment(getFrame(nmask2, i, type="render"))
+          if(length(tbl.new)>0){
+            tbl.new <- cbind(tbl.new, counts=rep(0, nrow(tbl.new)))
+            if(length(tbl.old)>0){
+              countsInLastFrame <- 0
+              for(m in seq.int(nrow(tbl.new))){
+                for(n in seq.int(nrow(tbl.old))){
+                  if(euc.dist(tbl.new[m, c("m.cx", "m.cy")], tbl.old[n, c("m.cx", "m.cy")]) < input$distance){
+                    countsInLastFrame <- countsInLastFrame + 1
+                    tbl.new[m, "counts"] <- tbl.old[n, "counts"]
+                    next
+                  }
+                }
+              } 
+              counts <- nrow(tbl.new) - countsInLastFrame
+            }else{
+              countsInLastFrame <- 0
+              counts <- nrow(tbl.new)
+            }
+            lastCount <- ifelse(nrow(cnt_tbl)>0, cnt_tbl[nrow(cnt_tbl), "cumsum"], 0)
+            if(sum(tbl.new[, "counts"]==0)>0){
+              tbl.new[tbl.new[, "counts"]==0, "counts"] <- seq.int(sum(tbl.new[, "counts"]==0)) + lastCount
+            }
+            cnt_tbl <- rbind(cnt_tbl, 
+                             data.frame(frame  = i,
+                                        counts = counts,
+                                        countsInLastFrame = countsInLastFrame,
+                                        cumsum = lastCount + counts,
+                                        x      = paste(round(tbl.new[, "m.cx"], digits = 1), collapse = ";"), 
+                                        y      = paste(round(tbl.new[, "m.cy"], digits = 1), collapse = ";")))
+            tbl.old <- tbl.new
+            ## paste number
+            tmpfile <- tempfile()
+            png(filename = tmpfile, width = nrow(sample), height = ncol(sample))
+            display(getFrame(sample, i, type="render"), method = "raster")
+            text(tbl.new[, "m.cx"], tbl.new[, "m.cy"], 
+                 labels = tbl.new[, "counts"], 
+                 col = ifelse(tbl.new[, "counts"]>lastCount, "orange", "white"))
+            dev.off()
+            sample2[[i]] <- readImage(tmpfile, type = "png")[, , 1:3]
+            unlink(tmpfile)
+          }else{
+            sample2[[i]] <- getFrame(sample, i, type="render")
+          }
+          progress$set(value = .7 + .2*i/numberOfFrames(nmask2, type="render"), detail = paste("frame", i))
+        }
+        sample <- combine(sample2)
+        rm(sample2)
       }
-      sample <- combine(sample2)
-      rm(sample2)
+      
       rm(nmask2)
       gc(reset=TRUE)
       # Close the progress when this reactive exits (even if there's an error)
@@ -195,6 +308,13 @@ server <- function(input, output) {
     
     return(display(sample, method = "browser"))
   })
+  output$downloadData <- downloadHandler(
+    filename = "cell.counter.xml",
+    content = function(file){
+      file.copy("cellCounter.xml", to = file)
+      },
+    contentType = "application/xml"
+  )
 }
 
 # Run the application 
