@@ -10,6 +10,7 @@
 #' @param counterType counterType in Cell Counter of imageJ
 #' @param zvalue change the z to original z.
 #' @param adjustPipeline adjust pipeline before cell detection
+#' @param saveAdjustImage the file name for adjusted image. NULL to ignore saveing.
 #' @param silence output the message or not
 #' @param ... parameters could be used in the pipeline
 #' @import EBImage
@@ -27,7 +28,10 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
                         xmlfile=sub("\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
                         imageFilename=sub("\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
                         counterType=c(new=5, old=4), zvalue=fixZvalue,
-                        adjustPipeline=c(GaussianBlur, increaseContrast), 
+                        adjustPipeline=c(GaussianBlur, increaseContrast),
+                        saveAdjustImage=sub("\\.(tiff|tif)$", 
+                                            paste0(".adj.", channel, ".tif"), 
+                                            basename(file), ignore.case = TRUE),
                         silence=FALSE, ...){
   channel <- match.arg(channel, choices = c("green", "red", "blue"))
   stopifnot(offset<1)
@@ -39,6 +43,9 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
   for(fun in adjustPipeline){
     stopifnot(is.function(fun))
     img <- fun(img=img, ...)
+  }
+  if(is.character(saveAdjustImage)){
+    writeImage(img, files = saveAdjustImage, type="TIFF")
   }
   ## detect the cells
   if(!silence) message("detecting cells")
