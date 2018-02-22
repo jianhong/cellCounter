@@ -26,7 +26,7 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
                         distanceSameCell=10, 
                         xmlfile=sub("\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
                         imageFilename=sub("\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
-                        counterType=c(new=5, old=4), zvalue=zvalue,
+                        counterType=c(new=5, old=4), zvalue=fixZvalue,
                         adjustPipeline=c(GaussianBlur, increaseContrast), 
                         silence=FALSE, ...){
   channel <- match.arg(channel, choices = c("green", "red", "blue"))
@@ -42,11 +42,11 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
   } 
   ## detect the cells
   if(!silence) message("detecting cells")
-  nmask <- detectCells(img, offset=offset, cellSizeRange=cellSizeRange, ...)
+  img <- detectCells(img, offset=offset, cellSizeRange=cellSizeRange, ...)
   ## coutput the xml
   if(!silence) message("output xml file")
-  saveCountXML(nmask, xmlfile = xmlfile, file = imageFilename, distance = distanceSameCell, 
-               counterType=counterType, zvalue=zvalue, ...)
+  saveCountXML(img, xmlfile = xmlfile, file = imageFilename, distance = distanceSameCell, 
+               counterType=counterType, zv=zvalue, ...)
 }
 
 readFile <- function(file, channel){
@@ -84,8 +84,8 @@ detectCells <- function(img, offset, cellSizeRange, size=31, tolerance=1, ext=1,
 }
 
 euc.dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
-zvalue <- function(n) 2*n-1
-saveCountXML <- function(nmask, xmlfile="cellCounter.xml", file, distance=10, counterType=c(new=4, old=3), zvalue=zvalue, ...){
+fixZvalue <- function(n) 2*n-1
+saveCountXML <- function(nmask, xmlfile="cellCounter.xml", file, distance=10, counterType=c(new=4, old=3), zv=fixZvalue, ...){
   stopifnot(is(nmask, "Image"))
   stopifnot(all(counterType>0))
   stopifnot(all(counterType<9))
@@ -105,11 +105,12 @@ saveCountXML <- function(nmask, xmlfile="cellCounter.xml", file, distance=10, co
           }
         }
       }
-      
+      cx <- round(tbl.new[, "m.cx"])
+      cy <- round(tbl.new[, "m.cy"])
       counterTypeTable <- rbind(counterTypeTable,
-                                data.frame(x=round(tbl.new[, "m.cx"]),
-                                           y=round(tbl.new[, "m.cy"]),
-                                           z=zvalue(i),
+                                data.frame(x=cx,
+                                           y=cy,
+                                           z=zv(i),
                                            type=checklist))
     }
     tbl.old <- tbl.new
