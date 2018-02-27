@@ -1,5 +1,5 @@
 #' cell counter
-#' @description count the cells from a tiff file and output xml for imageJ
+#' @description count the cells from a z-stack tiff file and output xml for imageJ
 #' @param file tiff file name
 #' @param channel channel to be detected
 #' @param offset the offset of color from background, (0, 1).
@@ -28,7 +28,7 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
                         xmlfile=sub("\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
                         imageFilename=sub("\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
                         counterType=c(new=5, old=4), zvalue=fixZvalue,
-                        adjustPipeline=c(GaussianBlur, increaseContrast),
+                        adjustPipeline=c(GaussianBlur, ScurveAdjust),
                         saveAdjustImage=sub("\\.(tiff|tif)$", 
                                             paste0(".adj.", channel, ".tif"), 
                                             basename(file), ignore.case = TRUE),
@@ -56,7 +56,7 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
                counterType=counterType, zv=zvalue, ...)
 }
 
-readFile <- function(file, channel){
+readFile <- function(file, channel=NULL){
   stopifnot(file.exists(file))
   ## read image
   img <- readImage(file)
@@ -67,6 +67,7 @@ readFile <- function(file, channel){
       img <- img[, , 1:3, ]
     }
   }
+  if(is.null(channel)) return(img)
   channel(img, channel)
 }
 
@@ -160,28 +161,3 @@ saveCountXML <- function(nmask, xmlfile="cellCounter.xml", file, distance=10, co
   cat(saveXML(xml, prefix = '<?xml version="1.0" encoding = "UTF-8"?>'), file = xmlfile, sep="\n")
 }
 
-GaussianBlur <- function(img, sigma=5, ...){
-  stopifnot(is(img, "Image"))
-  gblur(img, sigma = sigma)
-}
-
-rescaleImage <- function(img, ...){
-  stopifnot(is(img, "Image"))
-  if(colorMode(img)!=0){
-    stop("colorMode of img must be Grayscale")
-  }
-  if(numberOfFrames(img, type="render")==1){
-    imageData(img) <- rescale(imageData(img), to=c(0, 1))
-  }else{
-    for(i in seq.int(numberOfFrames(img, type="render"))){
-      imageData(img)[, , i] <- rescale(imageData(img)[, , i], to=c(0, 1))
-    }
-  }
-  img
-}
-
-increaseContrast <- function(img, times=2, ...){
-  stopifnot(is(img, "Image"))
-  stopifnot(is.numeric(times))
-  img*times
-}
