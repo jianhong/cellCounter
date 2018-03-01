@@ -21,6 +21,8 @@ library(scales)
 
 library(XML)
 
+library(RbioFormats)
+
 cellCounter(file.path("inst", "extdata", "sample.tiff"), xmlfile="sample.xml", imageFilename="sample.czi")
 
 cellCounterSingleFrame(file.path("inst", "extdata", "low.jpg"), formula="blue+red", xmlfile="low.xml", imageFilename="low.jpg")

@@ -44,3 +44,28 @@ ScurveAdjust <- function(img, k=10, L=1, x0=0.5, ...){
   imageData(img) <- data
   img
 }
+
+changeCellSize <- function(img, direction=c("erode", "dilate"), 
+                           targetChannel=c("red", "green", 'blue'), 
+                           size=3, shape="disc", ...){
+  stopifnot(is(img, "Image"))
+  direction <- match.arg(direction)
+  kern <- makeBrush(size=size, shape=shape)
+  if(colorMode(img)==0){
+    return(switch(direction,
+                  erode=erode(img, kern),
+                  dilate=dilate(img, kern)))
+  }
+  targetChannel <- match.arg(targetChannel, several.ok = TRUE)
+  imgs <- lapply(c("red", "green", "blue"), channel, x=img)
+  names(imgs) <- c("red", "green", "blue")
+  imgs.new <- lapply(imgs, function(im){
+    switch(direction,
+           erode=erode(im, kern),
+           dilate=dilate(im, kern))
+  }) 
+  for(i in targetChannel){
+    imgs[[i]] <- imgs.new[[i]]
+  }
+  rgbImage(imgs[["red"]], imgs[["green"]], imgs[["blue"]])
+}

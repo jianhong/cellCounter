@@ -2,7 +2,7 @@
 #' @description count the cells from a single frame tiff file and output xml for imageJ
 #' @param file tiff file name
 #' @param channels channel to be detected
-#' @param formula the relationship of channels. 
+#' @param formula the relationship of channels. Here '*'=='intersect' and '+'=='contain'
 #'      eg. blue*green+red means the cell must have blue and green, and red is in the cell.
 #'          blue*green-red means the cell must have blue and green, and red is NOT in the cell.
 #'          blue*green means the cell must have blue and green
@@ -38,7 +38,7 @@ cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), for
   stopifnot(offset<1)
   stopifnot(offset>0)
   if(!silence) message("reading tiff file")
-  img <- readFile(file)
+  img <- readFile(file)$img
   ## pre adjust
   if(!silence) message("adjust image file")
   for(fun in adjustPipeline){
@@ -54,29 +54,30 @@ cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), for
   
   if(!missing(formula)){
     formula <- gsub("\\s+", "", formula[1])
-    formula1 <- strsplit(formula, "\\+|-|\\*")[[1]]
-    if(!all(formula1 %in% c("red", "green", "blue"))){
-      stop("channels in formula is not in blue, green or red.")
-    }
-    if(any(table(formula1)>1)){
-      stop("channels in formula can be appeared only once.")
-    }
-    operators <- strsplit(formula, "[a-zA-Z]+")[[1]]
-    operators <- operators[operators!=""]
-    if(length(operators)>2){
-      stop("formula is too complicated!")
-    }
-    if(any(operators=="*")){
-      oid <- which(operators=="*")
-      if(length(oid)==1){
-        oid <- zmap[, formula1[oid]] & zmap[, formula1[oid+1]] & rowSums(zmap)!=3
-      }else{
-        oid <- rowSums(zmap)==3
+    formula1 <- strsplit(formula, "\\+|-|\\*")
+    operators <- strsplit(formula, "[a-zA-Z]+")
+    operators <- lapply(operators, function(.ele) .ele[.ele!=""])
+    keep <- rep(FALSE, nrow(zmap))
+    for(i in seq_along(formula1)){
+      if(!all(formula1[[i]] %in% c("red", "green", "blue"))){
+        stop("channels in formula is not in blue, green or red.")
       }
-      zmap <- zmap[rowSums(zmap)==1 | oid, , drop=FALSE]
-    }else{
-      zmap <- zmap[rowSums(zmap)==1, , drop=FALSE]
+      if(any(table(formula1[[i]])>1)){
+        stop("channels in formula can be appeared only once.")
+      }
+      if(length(operators[[i]])>2){
+        stop("formula is too complicated!")
+      }
+      if(any(operators[[i]]=="*")){
+        oid <- which(operators[[i]]=="*")
+        if(length(oid)==1){
+          keep[zmap[, formula1[[1]][oid]] & zmap[, formula1[[1]][oid+1]] & rowSums(zmap)!=3] <- TRUE
+        }else{
+          keep[rowSums(zmap)==3] <- TRUE
+        }
+      }
     }
+    zmap <- zmap[rowSums(zmap)==1 | keep, , drop=FALSE]
   }else{
     formula1 <- NULL
     operators <- NULL
@@ -93,46 +94,47 @@ cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), for
   ## detect the cells
   if(!silence) message("detecting cells")
   img <- detectCells(img, offset=offset, cellSizeRange=cellSizeRange, ...)
-  if("+" %in% operators){
-    ## remove object by `+`
-    oid <- which(operators=="+")
-    newChannel <- NULL
-    for(ioid in oid){
-      if(length(newChannel)==0){
-        plusLeft <- formula1[ioid]
-        if(ioid>1){
-          if(operators[ioid-1]=="*"){
-            plusLeft <- formula1[c(ioid-1, ioid)]
+  ## remove object for different counter type
+  for(i in seq_along(formula)){
+    if("+" %in% operators[[i]]){
+      ## remove object by `+`
+      oid <- which(operators[[i]]=="+")
+      newChannel <- NULL
+      for(ioid in oid){
+        if(length(newChannel)==0){
+          plusLeft <- formula1[[i]][ioid]
+          if(ioid>1){
+            if(operators[[i]][ioid-1]=="*"){
+              plusLeft <- formula1[[i]][c(ioid-1, ioid)]
+            }
+          }
+          idLeft <- which(rowSums(zmap[, plusLeft, drop=FALSE])==length(plusLeft))
+          frameLeft <- getFrame(img, idLeft, type="render")
+        }else{
+          frameLeft <- newChannel
+        }
+        plusRight <- formula1[[i]][ioid+1]
+        if(ioid+1<length(operators[[i]])){
+          if(operators[[i]][ioid+2]=="*"){
+            plusRight <- formula1[[i]][c(ioid+1, ioid+2)]
           }
         }
-        idLeft <- which(rowSums(zmap[, plusLeft, drop=FALSE])==length(plusLeft))
-        frameLeft <- getFrame(img, idLeft, type="render")
-      }else{
-        frameLeft <- newChannel
+        ## plusRight must be in plusLeft
+        idRight <- which(rowSums(zmap[, plusRight, drop=FALSE])==length(plusRight))
+        frameRight <- getFrame(img, idRight, type="render")
+        tbl0 <- table(imageData(frameLeft))
+        tbl <- imageData(frameLeft) * as.numeric(imageData(frameRight)>0)
+        tbl <- table(tbl)
+        tbl <- as.numeric(names(tbl0)[!names(tbl0) %in% names(tbl[tbl>0])])
+        newChannel <- rmObjects(frameLeft, tbl, reenumerate=FALSE)
       }
-      plusRight <- formula1[ioid+1]
-      if(ioid+1<length(operators)){
-        if(operators[ioid+2]=="*"){
-          plusRight <- formula1[c(ioid+1, ioid+2)]
-        }
-      }
-      ## plusRight must be in plusLeft
-      idRight <- which(rowSums(zmap[, plusRight, drop=FALSE])==length(plusRight))
-      frameRight <- getFrame(img, idRight, type="render")
-      tbl0 <- table(imageData(frameLeft))
-      tbl <- imageData(frameLeft) * as.numeric(imageData(frameRight)>0)
-      tbl <- table(tbl)
-      tbl <- as.numeric(names(tbl0)[!names(tbl0) %in% names(tbl[tbl>0])])
-      newChannel <- rmObjects(frameLeft, tbl, reenumerate=FALSE)
+      img <- combine(img, newChannel)
     }
-    img <- combine(img, newChannel)
   }
+  
   ## coutput the xml
   if(!silence) message("output xml file")
-  saveSingleFrameCountXML(img, xmlfile = xmlfile, file = imageFilename, zmap=zmap, ...)
-  typelist <- sapply(seq.int(nrow(zmap)), function(.ele) paste(colnames(zmap)[zmap[.ele, ]], collapse=" + "))
-  names(typelist) <- paste0("Type", seq_along(typelist))
-  typelist
+  saveSingleFrameCountXML(img, xmlfile = xmlfile, file = imageFilename, zmap=zmap, formula=formula, ...)
 }
 
 colorZmap <- function(channels=c("red", "green", "blue")){
@@ -188,10 +190,13 @@ setImage <- function(imgs, operater=c("intersect", "union", "diff"), maskValue=0
   avgImage(imgs)
 }
 
-saveSingleFrameCountXML <- function(nmask, xmlfile="cellCounter.xml", file, zmap, ...){
+saveSingleFrameCountXML <- function(nmask, xmlfile="cellCounter.xml", file, zmap, formula, ...){
   stopifnot(is(nmask, "Image"))
   counterTypeTable <- data.frame(x=NA, y=NA, z=NA, type=NA)
-  for(i in seq.int(numberOfFrames(nmask, type="render"))){
+  n <- numberOfFrames(nmask, type="render")
+  typelist <- n-seq.int(n)+1
+  names(typelist) <- c(apply(zmap, 1, function(.ele) paste(colnames(zmap)[.ele], collapse = "*")), formula)
+  for(i in seq.int(n)){
     tbl <- computeFeatures.moment(getFrame(nmask, i, type="render"))
     if(length(tbl)>0){
       cx <- round(tbl[, "m.cx"])
@@ -201,7 +206,7 @@ saveSingleFrameCountXML <- function(nmask, xmlfile="cellCounter.xml", file, zmap
                                 data.frame(x=cx,
                                            y=cy,
                                            z=cz, 
-                                           type=i))
+                                           type=typelist[i]))
     }
   }
   counterTypeTable <- counterTypeTable[!is.na(counterTypeTable$x), , drop=FALSE]
@@ -228,4 +233,5 @@ saveSingleFrameCountXML <- function(nmask, xmlfile="cellCounter.xml", file, zmap
   }
   xml$closeTag()
   cat(saveXML(xml, prefix = '<?xml version="1.0" encoding = "UTF-8"?>'), file = xmlfile, sep="\n")
+  return(typelist)
 }
