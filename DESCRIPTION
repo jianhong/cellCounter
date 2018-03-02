@@ -1,0 +1,34 @@
+Package: cellCounter
+Type: Package
+Title: cell counter
+Version: 0.0.1
+Author: Jianhong Ou, Yanchao Han
+Maintainer: Jianhong Ou <jianhong.ou@duke.edu>
+Depends:
+    R (>= 3.4),
+    methods
+Imports:
+    EBImage,
+    RBioFormats,
+    DelayedArray,
+    HDF5Array,
+    scales,
+    XML,
+    graphics
+Suggests:
+    testthat,
+    knitr,
+    BiocStyle,
+    RUnit,
+    rJava
+Description: Count the cells from a single frame or a z-stack image file and output xml for imageJ.
+License: GPL (>= 2)
+LazyLoad: yes
+biocViews: CellBiology, 
+           Infrastructure, 
+           Visualization,
+           Classification,
+           Visualization,
+           Software
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1

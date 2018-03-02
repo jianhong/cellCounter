@@ -13,26 +13,28 @@
 #' @param xmlfile filename of xml
 #' @param imageFilename filename of the original czi file
 #' @param adjustPipeline adjust pipeline before cell detection
+#' @param detectFun the function used to detect the cell, see \link{detectObjects}, \link{detectObjects2}.
 #' @param saveAdjustImage the file name for adjusted image. NULL to ignore saveing.
 #' @param silence output the message or not
 #' @param ... parameters could be used in the pipeline
 #' @import EBImage
 #' @import scales
 #' @import XML
+#' @export
 #' @author Jianhong Ou
 #' @examples 
 #' library(EBImage)
 #' library(scales)
 #' library(XML)
-#' cellCounterSingleFrame(file.path("inst", "extdata", "low.jpg"), formula="blue+red", xmlfile="low.xml", imageFilename="low.jpg")
+#' cellCounterSingleFrame(system.file("extdata", "low.jpg", package="cellCounter"), 
+#' formula="blue+red", xmlfile="low.xml", imageFilename="low.jpg")
 cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), formula, maskValue=0.3, 
                         offset=0.1, cellSizeRange=c(10, 1000), 
                         xmlfile=sub("\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
                         imageFilename=sub("\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
                         adjustPipeline=c(ScurveAdjust),
-                        saveAdjustImage=sub("\\.(tiff|tif)$", 
-                                            paste0(".adj.", channel, ".tif"), 
-                                            basename(file), ignore.case = TRUE),
+                        detectFun=detectObjects,
+                        saveAdjustImage=NULL,
                         silence=FALSE, ...){
   channels <- match.arg(channels, choices = c("green", "red", "blue"), several.ok = TRUE)
   stopifnot(offset<1)
@@ -93,7 +95,7 @@ cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), for
   img <- combine(img)
   ## detect the cells
   if(!silence) message("detecting cells")
-  img <- detectCells(img, offset=offset, cellSizeRange=cellSizeRange, ...)
+  img <- detectFun(img, offset=offset, cellSizeRange=cellSizeRange, ...)
   ## remove object for different counter type
   for(i in seq_along(formula)){
     if("+" %in% operators[[i]]){
@@ -135,103 +137,4 @@ cellCounterSingleFrame <- function(file, channels=c("red", "green", "blue"), for
   ## coutput the xml
   if(!silence) message("output xml file")
   saveSingleFrameCountXML(img, xmlfile = xmlfile, file = imageFilename, zmap=zmap, formula=formula, ...)
-}
-
-colorZmap <- function(channels=c("red", "green", "blue")){
-  ncontrasts <- length(channels)
-  noutcomes <- 2^ncontrasts
-  outcomes <- matrix(0, noutcomes, ncontrasts)
-  colnames(outcomes) <- channels
-  for(j in 1:ncontrasts){
-    outcomes[, j] <- rep(0:1, times=2^(j-1), each=2^(ncontrasts-j))
-  }
-  mode(outcomes) <- "logical"
-  outcomes
-}
-
-avgImage <- function(imgs){
-  ## imgs is a list of Image object
-  if(is.list(imgs)){
-    if(!all(sapply(imgs, is, class2="Image"))){
-      stop("imgs should be a list of Image objects")
-    }
-  }else{
-    stopifnot(is(imgs, "Image"))
-  }
-  n <- length(imgs)
-  if(n==1) return(imgs[[1]])
-  imgs <- lapply(imgs, function(.ele) .ele/n)
-  Reduce(`+`, imgs)
-}
-
-## set operator
-setImage <- function(imgs, operater=c("intersect", "union", "diff"), maskValue=0.5, ...){
-  if(is.list(imgs)){
-    if(!all(sapply(imgs, is, class2="Image"))){
-      stop("imgs should be a list of Image objects")
-    }
-  }else{
-    stopifnot(is(imgs, "Image"))
-  }
-  operater <- match.arg(operater)
-  FUN <- switch(operater,
-                intersect=`&`,
-                union=`|`,
-                diff=function(A, B){
-                  A & !B
-                })
-  n <- length(imgs)
-  if(n==1) return(imgs[[1]])
-  imgs2 <- lapply(imgs, function(.ele){
-    .ele > maskValue
-  })
-  imgs2 <- Reduce(FUN, imgs2)
-  imgs <- lapply(imgs, function(.ele) .ele*imgs2)
-  avgImage(imgs)
-}
-
-saveSingleFrameCountXML <- function(nmask, xmlfile="cellCounter.xml", file, zmap, formula, ...){
-  stopifnot(is(nmask, "Image"))
-  counterTypeTable <- data.frame(x=NA, y=NA, z=NA, type=NA)
-  n <- numberOfFrames(nmask, type="render")
-  typelist <- n-seq.int(n)+1
-  names(typelist) <- c(apply(zmap, 1, function(.ele) paste(colnames(zmap)[.ele], collapse = "*")), formula)
-  for(i in seq.int(n)){
-    tbl <- computeFeatures.moment(getFrame(nmask, i, type="render"))
-    if(length(tbl)>0){
-      cx <- round(tbl[, "m.cx"])
-      cy <- round(tbl[, "m.cy"])
-      cz <- ifelse(i<=nrow(zmap), sum(zmap[i, ]), 3)
-      counterTypeTable <- rbind(counterTypeTable,
-                                data.frame(x=cx,
-                                           y=cy,
-                                           z=cz, 
-                                           type=typelist[i]))
-    }
-  }
-  counterTypeTable <- counterTypeTable[!is.na(counterTypeTable$x), , drop=FALSE]
-  suppressWarnings({xml <- xmlTree("CellCounter_Marker_File")})
-  xml$addNode("Image_Properties", close = FALSE)
-  xml$addNode("Image_Filename", file)
-  xml$closeTag()
-  xml$addNode("Marker_Data", close = FALSE)
-  xml$addNode("Current_Type", 1)
-  for(type in seq.int(8)){
-    xml$addNode("Marker_Type", close = FALSE)
-    xml$addNode("Type", type)
-    counterType <- counterTypeTable[counterTypeTable$type==type, , drop=FALSE]
-    if(nrow(counterType)>0){
-      for(m in seq.int(nrow(counterType))){
-        xml$addNode("Marker", close = FALSE)
-        xml$addNode("MarkerX", counterType$x[m])
-        xml$addNode("MarkerY", counterType$y[m])
-        xml$addNode("MarkerZ", counterType$z[m])
-        xml$closeTag()
-      }
-    }
-    xml$closeTag()
-  }
-  xml$closeTag()
-  cat(saveXML(xml, prefix = '<?xml version="1.0" encoding = "UTF-8"?>'), file = xmlfile, sep="\n")
-  return(typelist)
 }

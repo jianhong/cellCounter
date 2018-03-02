@@ -8,23 +8,16 @@ a shiny app for cell count for tiff files.
 
 library(shiny)
 
-runGitHub("cellCounter", "jianhong")
+runGitHub("cellCounter", "jianhong", subdir="inst/shinyapp/")
 
 ### local R
 
-source("https://raw.githubusercontent.com/jianhong/cellCounter/master/cellCounter.R")
-source("https://raw.githubusercontent.com/jianhong/cellCounter/master/adjustPipelineFun.R")
+library(devtools)
+install_github("jianhong/cellCounter")
+library(cellCounter)
 
-library(EBImage)
+cellCounter(system.file("extdata", "sample.tiff", package="cellCounter"), xmlfile="sample.xml", imageFilename="sample.czi")
 
-library(scales)
-
-library(XML)
-
-library(RbioFormats)
-
-cellCounter(file.path("inst", "extdata", "sample.tiff"), xmlfile="sample.xml", imageFilename="sample.czi")
-
-cellCounterSingleFrame(file.path("inst", "extdata", "low.jpg"), formula="blue+red", xmlfile="low.xml", imageFilename="low.jpg")
+cellCounterSingleFrame(system.file("extdata", "low.jpg", package="cellCounter"), formula="blue+red", xmlfile="low.xml", imageFilename="low.jpg")
 
 [youtube tutorial](https://youtu.be/UUWOd5ys8ZY)
