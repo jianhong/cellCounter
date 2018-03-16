@@ -4,14 +4,25 @@
 \alias{overlayDetections}
 \title{overlay detections}
 \usage{
-overlayDetections(imgsList)
+overlayDetections(imgs, cells, col = "orange", output = "Image", ...)
 }
 \arguments{
-\item{imgsList}{output of \link{cropImages}.}
+\item{imgs}{a list of \link[EBImage:Image-class]{Image} or \link{Image2}.}
+
+\item{cells}{a list of \link{cell} objects.}
+
+\item{col}{color of the labels.}
+
+\item{output}{\link[EBImage:Image-class]{Image} or \link{Image2}}
+
+\item{\dots}{the parameters for \link[graphics:text]{text}}
 }
 \value{
-an object of \link[EBImage:Image-class]{Image}.
+an object of \link[EBImage:Image-class]{Image}, or a list of \link{Image2}.
 }
 \description{
 prepare data for display detections
+}
+\author{
+Jianhong Ou
 }

@@ -94,13 +94,15 @@ filterBySize <- function(nmask, objectSizeRange=c(10, 1000)){
 #' detect objects method3
 #' @description detect object, good for dense objects.
 #' @param img an object of \link[EBImage:Image-class]{Image} of \link{Image2}.
-#' @param offset the offset of color from background, (0, 1).
+#' @param offset,w,h offset,w,h for \link[EBImage:thresh]{thresh}
 #' @param objectSizeRange numeric(2). object size range in pixel.
+#' @param size see \link[EBImage:makeBrush]{makeBrush}
 #' @param tolerance,ext see \link[EBImage:watershed]{watershed}.
 #' @param \dots not use.
 #' @return an label Image.
 #' @import EBImage
 #' @importFrom scales rescale
+#' @importFrom stats fivenum
 #' @details steps: 
 #' 1. use watershed to segment the objects.
 #' 2. use bwlabel to label the objects
@@ -108,8 +110,8 @@ filterBySize <- function(nmask, objectSizeRange=c(10, 1000)){
 #' @export
 #' @author Jianhong Ou
 #'
-detectObjects3 <- function(img, offset=.05, objectSizeRange=c(10, 1000), 
-                          tolerance=1, ext=1, ...){
+detectObjects3 <- function(img, offset=.1, objectSizeRange=c(50, 1000), 
+                           size=5, w=40, h=40, tolerance=1, ext=1, ...){
   stopifnot(inherits(img, c("Image", "Image2")))
   if(is(img, "Image2")) img <- toImage(img)
   stopifnot(colorMode(img)==Grayscale)
@@ -117,8 +119,27 @@ detectObjects3 <- function(img, offset=.05, objectSizeRange=c(10, 1000),
   stopifnot(offset>0)
   stopifnot(length(objectSizeRange)==2)
   stopifnot(is.numeric(objectSizeRange))
-  nmask <- watershed(distmap(img), tolerance=tolerance, ext=ext)
+  ## remove background
+  img <- abs(img - mean(img))
+  img <- increaseContrast(img, increaseContrast_times = 2)
+  img <- medianFilter(img, size=5)
+  ctmask <- thresh(img, w=w, h=h, offset=offset)
+  
+  ## label
+  nmask <- watershed(distmap(ctmask), tolerance=tolerance, ext=ext)
   nmask <- bwlabel(nmask)
-  ## filter by objectSizeRange
-  filterBySize(nmask, objectSizeRange)
+  cell.size <- table(imageData(nmask))
+  cell.size <- cell.size[names(cell.size)!="0"]
+  cell.size <- fivenum(cell.size)
+  
+  normalCells <- filterBySize(nmask, objectSizeRange = c(objectSizeRange[1], cell.size[4]))
+  bigCells <- filterBySize(nmask, objectSizeRange = c(cell.size[4]+0.000001, 2*objectSizeRange[2]))
+  while(sum(bigCells)>0){
+    bmask <- erode(bigCells, makeBrush(size, shape='disc'))
+    bmask <- bwlabel(bmask)
+    normalCells <- normalCells + filterBySize(bmask, objectSizeRange = c(0, cell.size[4]))
+    bigCells <- filterBySize(bmask, objectSizeRange = c(cell.size[4]+0.000001, cell.size[5]+1))
+  }
+  
+  bwlabel(normalCells)
 }

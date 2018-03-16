@@ -1,3 +1,4 @@
+setClassUnion("numericOrNULL",members=c("numeric", "NULL"))
 #' Class cell
 #' @description An object of class cell represents a cell
 #' @aliases cell
@@ -13,21 +14,22 @@
 #' @slot color the color the cell
 #' @import methods
 #' @exportClass cell
+#' @author Jianhong Ou
 #' @examples 
 #' cell()
 #' 
 setClass("cell", 
          representation(cx="numeric", cy="numeric", 
-                        xs="numeric", ys="numeric", 
+                        xs="numericOrNULL", ys="numericOrNULL", 
                         id="numeric", 
-                        parent="numeric",
-                        offsprings="numeric",
+                        parent="numericOrNULL",
+                        offsprings="numericOrNULL",
                         frame="numeric",
                         color="character"),
          prototype(cx=0, cy=0,
-                   xs=0, ys=0,
-                   id=0, parent=0,
-                   offsprings=0,
+                   xs=NULL, ys=NULL,
+                   id=0, parent=NULL,
+                   offsprings=NULL,
                    frame=0,
                    color="#000000"),
          validity=function(object){
@@ -41,6 +43,49 @@ setClass("cell",
 cell <- function(...){
   new("cell", ...)
 }
+#' Method parent
+#' @rdname cell-class
+#' @aliases parent,cell-method
+#' @param x an object of cell.
+#' @exportMethod parent
+setGeneric("parent", function(x) standardGeneric("parent"))
+setMethod("parent", "cell", function(x){
+  slot(x, "parent")
+})
+#' Method parent<-
+#' @rdname cell-class
+#' @aliases parent<-,cell-method
+#' @param value the value to be applied.
+#' @exportMethod parent<-
+setGeneric("parent<-", function(x, value) standardGeneric("parent<-"))
+setReplaceMethod("parent", "cell", function(x, value){
+  slot(x, "parent", check=TRUE) <- value
+  x
+})
+#' Method offsprings
+#' @rdname cell-class
+#' @aliases offsprings,cell-method
+#' @exportMethod offsprings
+setGeneric("offsprings", function(x) standardGeneric("offsprings"))
+setMethod("offsprings", "cell", function(x){
+  slot(x, "offsprings")
+})
+#' Method offsprings<-
+#' @rdname cell-class
+#' @aliases offsprings<-,cell-method
+#' @exportMethod offsprings<-
+setGeneric("offsprings<-", function(x, value) standardGeneric("offsprings<-"))
+setReplaceMethod("offsprings", "cell", function(x, value){
+  slot(x, "offsprings", check=TRUE) <- value
+  x
+})
+#' Mothod $
+#' @rdname cell-class
+#' @param name slot name of cell
+#' @exportMethod $
+#' @aliases $,cell-method
+setMethod("$", "cell", function(x, name) slot(x, name))
+
 
 #' Class Image2
 #' @description An object of class Image2 represents a Image with HDF5Array
@@ -53,6 +98,7 @@ cell <- function(...){
 #' @import DelayedArray
 #' @import HDF5Array
 #' @exportClass Image2
+#' @author Jianhong Ou
 #' @examples
 #' library(EBImage)
 #' img <- readImage(system.file("extdata", "low.jpg", package="cellCounter")) 
@@ -116,7 +162,7 @@ setMethod("imageData", "Image2", function(y){
 setGeneric("imageData<-", function(y, value) sstandardGeneric("imageData"))
 #' @rdname Image2-class
 setReplaceMethod("imageData", "Image2", function(y, value){
-  if(is(value, "DelayedArray")){
+  if(!is(value, "DelayedArray")){
     value <- as(value, "HDF5Array")
   }
   for(sn in slotNames(value)) slot(y, sn, check=TRUE) <- slot(value, sn)
@@ -138,6 +184,15 @@ setGeneric("colorMode<-", function(y, value) sstandardGeneric("colorMode<-"))
 setReplaceMethod("colorMode", "Image2", function(y, value){
   slot(y, "colormode", check=TRUE) <- value
   y
+})
+#' Method channel
+#' @rdname Image2-class
+#' @aliases channel,Image2-method
+#' @param mode A character value specifying the target mode for conversion. See \link[EBImage:channel]{channel}.
+#' @exportMethod channel
+setGeneric("channel", function(x, mode) sstandardGeneric("channel"))
+setMethod("channel", "Image2", function(x, mode){
+  channel(toImage(x), mode)
 })
 
 #' Method show
@@ -172,4 +227,3 @@ readListImg <- function(files, ...){
   names(imgs) <- basename(files)
   imgs
 }
-

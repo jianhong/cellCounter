@@ -20,6 +20,8 @@
 \alias{colorMode,Image2-method}
 \alias{colorMode<-}
 \alias{colorMode<-,Image2-method}
+\alias{channel}
+\alias{channel,Image2-method}
 \alias{show,Image2-method}
 \alias{display,Image2-method}
 \title{Class Image2}
@@ -46,6 +48,8 @@ colorMode(y)
 
 colorMode(y) <- value
 
+channel(x, mode)
+
 \S4method{show}{Image2}(object)
 
 \S4method{display}{Image2}(x, method, ...)
@@ -65,6 +69,8 @@ colorMode(y) <- value
 
 \item{value}{the image data or colormode.}
 
+\item{mode}{A character value specifying the target mode for conversion. See \link[EBImage:channel]{channel}.}
+
 \item{object}{an \link{Image2} object.}
 
 \item{method}{see \link[EBImage:display]{display}}
@@ -79,6 +85,8 @@ Method imageData<-
 Method colorMode
 
 Method colorMode<-
+
+Method channel
 
 Method show
 
@@ -97,4 +105,7 @@ library(EBImage)
 img <- readImage(system.file("extdata", "low.jpg", package="cellCounter")) 
 Image2(img)
 
+}
+\author{
+Jianhong Ou
 }

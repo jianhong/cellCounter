@@ -23,29 +23,24 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE)
 # Introduction
 
 ```{r, eval=FALSE}
-files <- dir("others/sample/v/", "*.tif", full.names = TRUE)
 library(EBImage)
-img <- lapply(files, function(.ele) readFile(.ele)$img)
-img <- rmBackground(img)
-img <- cropImages(img)
-img <- detectObjects(img, ...)
-overlay <- overlayDetections(img)
-display(overlay)
-
-
-
-library(DelayedArray)
-library(EBImage)
-library(HDF5Array)
-files <- dir("inst/others/sample/v", full.names = TRUE)
+library(cellCounter) ## must load EBImage first.
+files <- dir("../../others/sample/v", full.names = TRUE)[1:10]
 img2 <- readListImg(files)
-## detect the cells
+## detect the cells, time comsuming, please try to run on cluster.
 nmask.red <- lapply(img2, function(img){
-  Image2(detectObjects(channel(img, "red")))
+  Image2(detectObjects3(channel(img, "red")))
 })
 nmask.green <- lapply(img2, function(img){
-  Image2(detectObjects(channel(img, "green")))
+  Image2(detectObjects3(channel(img, "green")))
 })
+
+red.cells <- labeledImage2Cell(nmask.red, colorChannel="red")
+green.cells <- labeledImage2Cell(nmask.green, colorChannel="blue")
+cells <- setParentOfCells(c(red.cells, green.cells))
+ol <- overlayDetections(img2, cells)
+display(ol)
+cellTbl <- outputCellTable(cells)
 ```
 
 

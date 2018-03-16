@@ -8,9 +8,20 @@ depend on their number of frames and their position.
 1. distance of same cell must have overlaps
 2. same cell must be the nearest one
 3. same cell in same frame can have multiple colors, and the other informations should be merge
-4.}
+4. is the same cell not appear in continus frames, then stop search.
+5. one parent can have as much as two offsprings}
 \usage{
-setParentOfCells()
+setParentOfCells(cells, maxFrameDist = 10, overlapPercentage = 0.1)
+}
+\arguments{
+\item{cells}{the cell list.}
+
+\item{maxFrameDist}{max difference of frames for same cell}
+
+\item{overlapPercentage}{minimal percentage of overlapping for same cell or parent and child}
+}
+\value{
+a list of cell objects.
 }
 \description{
 given a list of cell,
@@ -19,5 +30,9 @@ depend on their number of frames and their position.
 1. distance of same cell must have overlaps
 2. same cell must be the nearest one
 3. same cell in same frame can have multiple colors, and the other informations should be merge
-4.
+4. is the same cell not appear in continus frames, then stop search.
+5. one parent can have as much as two offsprings
+}
+\author{
+Jianhong Ou
 }

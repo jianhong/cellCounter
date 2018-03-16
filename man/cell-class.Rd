@@ -5,15 +5,50 @@
 \alias{cell-class}
 \alias{cell}
 \alias{cell}
+\alias{parent}
+\alias{parent,cell-method}
+\alias{parent<-}
+\alias{parent<-,cell-method}
+\alias{offsprings}
+\alias{offsprings,cell-method}
+\alias{offsprings<-}
+\alias{offsprings<-,cell-method}
+\alias{$,cell-method}
 \title{Class cell}
 \usage{
 cell(...)
+
+parent(x)
+
+parent(x) <- value
+
+offsprings(x)
+
+offsprings(x) <- value
+
+\S4method{$}{cell}(x, name)
 }
 \arguments{
 \item{\dots}{Each argument in \dots becomes an slot in the new cell.}
+
+\item{x}{an object of cell.}
+
+\item{value}{the value to be applied.}
+
+\item{name}{slot name of cell}
 }
 \description{
 An object of class cell represents a cell
+
+Method parent
+
+Method parent<-
+
+Method offsprings
+
+Method offsprings<-
+
+Mothod $
 }
 \section{Slots}{
 
@@ -40,4 +75,7 @@ An object of class cell represents a cell
 \examples{
 cell()
 
+}
+\author{
+Jianhong Ou
 }
