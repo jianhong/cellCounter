@@ -8,7 +8,7 @@
 #' @export
 #' @examples
 #' counterTypeTable = data.frame(x=1, y=1, z=1, type=1)
-#' writeCounterXML(counterTypeTable, tempfile())
+#' writeCounterXML(counterTypeTable, tempfile(), "test")
 writeCounterXML <- function(counterTypeTable, xmlfile, originalImageFileName){
   suppressWarnings({xml <- xmlTree("CellCounter_Marker_File")})
   xml$addNode("Image_Properties", close = FALSE)

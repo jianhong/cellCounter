@@ -18,7 +18,7 @@ write counter table to xmlfile
 }
 \examples{
 counterTypeTable = data.frame(x=1, y=1, z=1, type=1)
-writeCounterXML(counterTypeTable, tempfile())
+writeCounterXML(counterTypeTable, tempfile(), "test")
 }
 \author{
 Jianhong Ou
