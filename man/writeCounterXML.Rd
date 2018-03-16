@@ -16,6 +16,10 @@ writeCounterXML(counterTypeTable, xmlfile, originalImageFileName)
 \description{
 write counter table to xmlfile
 }
+\examples{
+counterTypeTable = data.frame(x=1, y=1, z=1, type=1)
+writeCounterXML(counterTypeTable, tempfile())
+}
 \author{
 Jianhong Ou
 }

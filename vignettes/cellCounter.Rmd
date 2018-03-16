@@ -26,6 +26,7 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE)
 library(EBImage)
 library(cellCounter) ## must load EBImage first.
 files <- dir("../../others/sample/v", full.names = TRUE)[1:10]
+## files <- dir("/Users/jianhongou/packages/others/tcf21/cal-s1", full.names = TRUE)
 img2 <- readListImg(files)
 ## detect the cells, time comsuming, please try to run on cluster.
 nmask.red <- lapply(img2, function(img){
@@ -38,8 +39,10 @@ nmask.green <- lapply(img2, function(img){
 red.cells <- labeledImage2Cell(nmask.red, colorChannel="red")
 green.cells <- labeledImage2Cell(nmask.green, colorChannel="blue")
 cells <- setParentOfCells(c(red.cells, green.cells))
+## need memory to display the figures
 ol <- overlayDetections(img2, cells)
 display(ol)
+## used for downstream analysis
 cellTbl <- outputCellTable(cells)
 ```
 

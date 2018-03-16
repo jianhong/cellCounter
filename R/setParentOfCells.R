@@ -111,7 +111,7 @@ resetCellIds <- function(cells, index, counter=1){
         cells <- tmp$cells
       }
     }else{
-      parent(cells[[id]]) <- cells[[index]]@id
+      parent(cells[[o]]) <- cells[[index]]@id
       offsprings(cells[[index]]) <- counter
       tmp <- resetCellIds(cells, o, counter=counter)
       counter <- tmp$counter

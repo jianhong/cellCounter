@@ -5,8 +5,8 @@
 #' @param originalImageFileName original image file name
 #' @import XML
 #' @author Jianhong Ou
-#' @examples
 #' @export
+#' @examples
 #' counterTypeTable = data.frame(x=1, y=1, z=1, type=1)
 #' writeCounterXML(counterTypeTable, tempfile())
 writeCounterXML <- function(counterTypeTable, xmlfile, originalImageFileName){
