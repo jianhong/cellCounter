@@ -4,7 +4,7 @@
 \alias{overlayDetections}
 \title{overlay detections}
 \usage{
-overlayDetections(imgs, cells, col = "orange", output = "Image", ...)
+overlayDetections(imgs, cells, col = "orange", output = "Image2", ...)
 }
 \arguments{
 \item{imgs}{a list of \link[EBImage:Image-class]{Image} or \link{Image2}.}

@@ -39,9 +39,8 @@ nmask.green <- lapply(img2, function(img){
 red.cells <- labeledImage2Cell(nmask.red, colorChannel="red")
 green.cells <- labeledImage2Cell(nmask.green, colorChannel="blue")
 cells <- setParentOfCells(c(red.cells, green.cells))
-## need memory to display the figures
 ol <- overlayDetections(img2, cells)
-display(ol)
+display(ol, frames=1:5)
 ## used for downstream analysis
 cellTbl <- outputCellTable(cells)
 ```

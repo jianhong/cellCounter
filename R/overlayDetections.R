@@ -10,7 +10,7 @@
 #' @export
 #' @author Jianhong Ou
 #' 
-overlayDetections <- function(imgs, cells, col="orange", output="Image", ...){
+overlayDetections <- function(imgs, cells, col="orange", output="Image2", ...){
   stopifnot(is.list(imgs))
   stopifnot(is.list(cells))
   output <- match.arg(output, choices = c("Image", "Image2"))
@@ -43,6 +43,8 @@ overlayDetections <- function(imgs, cells, col="orange", output="Image", ...){
   }
   if(output=="Image"){
     overlay <- Reduce(combine, overlay)
+  }else{
+    overlay <- condense(overlay)
   }
   return(overlay)
 }
@@ -60,7 +62,7 @@ rasterText <- function(img, ...){
   stopifnot(inherits(img, c("Image", "Image2")))
   tmpfile <- tempfile()
   tiff(filename = tmpfile, width = nrow(img), height = ncol(img))
-  display(matrix(0, nrow = nrow(img), ncol=ncol(img)), method="raster")
+  EBImage::display(matrix(0, nrow = nrow(img), ncol=ncol(img)), method="raster")
   text(...)
   dev.off()
   on.exit(unlink(tmpfile))

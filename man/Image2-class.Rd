@@ -23,6 +23,7 @@
 \alias{channel}
 \alias{channel,Image2-method}
 \alias{show,Image2-method}
+\alias{display}
 \alias{display,Image2-method}
 \title{Class Image2}
 \usage{
@@ -34,7 +35,7 @@ readImage2(file)
 
 writeImage2(x, ...)
 
-toImage(img2)
+toImage(img2, frames)
 
 imageData(y)
 
@@ -52,7 +53,7 @@ channel(x, mode)
 
 \S4method{show}{Image2}(object)
 
-\S4method{display}{Image2}(x, method, ...)
+display(x, method, frames, ...)
 }
 \arguments{
 \item{x}{an object of \link{Image2}}
@@ -64,6 +65,8 @@ channel(x, mode)
 \item{\dots}{parameters could passed to \link[EBImage:io]{writeImage}.}
 
 \item{img2}{an \link{Image2} object.}
+
+\item{frames}{frames of the images to display}
 
 \item{y}{an \link{Image2} object.}
 

@@ -139,17 +139,34 @@ writeImage2 <- function(x, ...){
 #' @rdname Image2-class
 #' @aliases toImage,Image2-method
 #' @param img2 an \link{Image2} object.
+#' @param frames frames of the images to display
 #' @export
-toImage <- function(img2){
+toImage <- function(img2, frames){
   if(is(img2, "Image")) return(img2)
-  Image(data=imageData(img2), dim=dim(img2), colormode=colorMode(img2))
+  d <- dim(img2)
+  if(!missing(frames)){
+    if(colorMode(img2)==Grayscale){
+      if(length(d)==3){
+        frames <- frames[frames<=d[3]&frames>0]
+        d <- c(d[1:2], length(frames))
+        imageData(img2) <- img2[, , frames]
+      }
+    }else{
+      if(length(d)==4){
+        frames <- frames[frames<=d[4]&frames>0]
+        d <- c(d[1:3], length(frames))
+        imageData(img2) <- img2[, , , frames]
+      }
+    }
+  }
+  Image(data=imageData(img2), dim=d, colormode=colorMode(img2))
 }
 #' Method imageData
 #' @rdname Image2-class
 #' @aliases imageData,Image2-method
 #' @param y an \link{Image2} object.
 #' @exportMethod imageData
-setGeneric("imageData", function(y) sstandardGeneric("imageData"))
+setGeneric("imageData", function(y) standardGeneric("imageData"))
 #' @rdname Image2-class
 setMethod("imageData", "Image2", function(y){
   as(y, "array")
@@ -159,7 +176,7 @@ setMethod("imageData", "Image2", function(y){
 #' @aliases imageData<-,Image2-method
 #' @param value the image data or colormode.
 #' @exportMethod imageData<-
-setGeneric("imageData<-", function(y, value) sstandardGeneric("imageData"))
+setGeneric("imageData<-", function(y, value) standardGeneric("imageData<-"))
 #' @rdname Image2-class
 setReplaceMethod("imageData", "Image2", function(y, value){
   if(!is(value, "DelayedArray")){
@@ -172,7 +189,7 @@ setReplaceMethod("imageData", "Image2", function(y, value){
 #' @rdname Image2-class
 #' @aliases colorMode,Image2-method
 #' @exportMethod colorMode
-setGeneric("colorMode", function(y) sstandardGeneric("colorMode"))
+setGeneric("colorMode", function(y) standardGeneric("colorMode"))
 setMethod("colorMode", "Image2", function(y){
   slot(y, "colormode")
 })
@@ -180,7 +197,7 @@ setMethod("colorMode", "Image2", function(y){
 #' @rdname Image2-class
 #' @aliases colorMode<-,Image2-method
 #' @exportMethod colorMode<-
-setGeneric("colorMode<-", function(y, value) sstandardGeneric("colorMode<-"))
+setGeneric("colorMode<-", function(y, value) standardGeneric("colorMode<-"))
 setReplaceMethod("colorMode", "Image2", function(y, value){
   slot(y, "colormode", check=TRUE) <- value
   y
@@ -190,7 +207,7 @@ setReplaceMethod("colorMode", "Image2", function(y, value){
 #' @aliases channel,Image2-method
 #' @param mode A character value specifying the target mode for conversion. See \link[EBImage:channel]{channel}.
 #' @exportMethod channel
-setGeneric("channel", function(x, mode) sstandardGeneric("channel"))
+setGeneric("channel", function(x, mode) standardGeneric("channel"))
 setMethod("channel", "Image2", function(x, mode){
   channel(toImage(x), mode)
 })
@@ -208,10 +225,12 @@ showImage2 <- function(object){
 
 #' Method display
 #' @rdname Image2-class
+#' @aliases display,Image2-method
 #' @param method see \link[EBImage:display]{display}
 #' @import EBImage
 #' @exportMethod display
-setMethod ("display", "Image2", function(x, method, ...) EBImage::display(toImage(x), method, ...))
+setGeneric("display", function(x, method, frames, ...) standardGeneric("display"))
+setMethod ("display", "Image2", function(x, method, frames, ...) EBImage::display(toImage(x, frames), method, ...))
 
 #' read a list of image
 #' @description use reasonable memory to read a list of images
@@ -226,4 +245,29 @@ readListImg <- function(files, ...){
   imgs <- lapply(files, readImage2)
   names(imgs) <- basename(files)
   imgs
+}
+
+#' combind two Image2
+#' @description combind two Image2
+#' @param imgs a list of \link{Image2}
+#' @import HDF5Array
+#' @import DelayedArray
+#' @return a object of \link{Image2} 
+condense <- function(imgs){
+  stopifnot(is.list(imgs))
+  if(length(imgs)<2) return(imgs)
+  d <- dim(imgs[[1]])
+  ld <- length(d)+1
+  null <- lapply(imgs, function(.ele){
+    if(!is(.ele, "Image2")){
+      stop("imgs must be a list of Image2")
+    }
+    if(!all(dim(.ele)==d)){
+      stop("dimension are different")
+    }
+    .ele <- as(array(.ele, dim = c(d, 1)), "HDF5Array")
+    aperm(.ele, ld:1)
+  })
+  imageData(imgs[[1]]) <- aperm(do.call(arbind, null), ld:1)
+  imgs[[1]]
 }
