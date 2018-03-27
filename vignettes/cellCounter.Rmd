@@ -39,6 +39,7 @@ nmask.green <- lapply(img2, function(img){
 red.cells <- labeledImage2Cell(nmask.red, colorChannel="red")
 green.cells <- labeledImage2Cell(nmask.green, colorChannel="green")
 cells <- setParentOfCells(c(red.cells, green.cells))
+#options(bitmapType='cairo')
 ol <- overlayDetections(img2, cells)
 display(ol, frames=1:5)
 ## used for downstream analysis
