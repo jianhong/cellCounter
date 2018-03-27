@@ -55,16 +55,16 @@ overlayDetections <- function(imgs, cells, col="orange", output="Image2", ...){
 #' @param \dots the parameters for \link[graphics:text]{text}
 #' @return an object of \link[EBImage:Image-class]{Image}.
 #' @importFrom graphics text
-#' @importFrom grDevices tiff dev.off
+#' @importFrom grDevices png dev.off
 #' @import EBImage
 #' @author Jianhong Ou
 rasterText <- function(img, ...){
   stopifnot(inherits(img, c("Image", "Image2")))
   tmpfile <- tempfile()
-  tiff(filename = tmpfile, width = nrow(img), height = ncol(img))
+  png(filename = tmpfile, width = nrow(img), height = ncol(img))
   EBImage::display(matrix(0, nrow = nrow(img), ncol=ncol(img)), method="raster")
   text(...)
   dev.off()
   on.exit(unlink(tmpfile))
-  readImage(tmpfile, type = "tiff")
+  readImage(tmpfile, type = "png")
 }
