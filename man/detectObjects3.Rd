@@ -8,7 +8,7 @@ detectObjects3(img, offset = 0.1, objectSizeRange = c(50, 1000), size = 5,
   w = 40, h = 40, tolerance = 1, ext = 1, ...)
 }
 \arguments{
-\item{img}{an object of \link[EBImage:Image-class]{Image} of \link{Image2}.}
+\item{img}{an object of \link[EBImage:Image-class]{Image} or \link{Image2}.}
 
 \item{offset, w, h}{offset,w,h for \link[EBImage:thresh]{thresh}}
 

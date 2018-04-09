@@ -1,7 +1,7 @@
 Package: cellCounter
 Type: Package
 Title: cell counter
-Version: 0.0.1
+Version: 0.0.2
 Author: Jianhong Ou, Yanchao Han
 Maintainer: Jianhong Ou <jianhong.ou@duke.edu>
 Depends:

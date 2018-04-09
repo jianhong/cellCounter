@@ -1,6 +1,6 @@
 #' detect objects method1
 #' @description detect object, good for dense objects.
-#' @param img an object of \link[EBImage:Image-class]{Image} of \link{Image2}.
+#' @param img an object of \link[EBImage:Image-class]{Image} or \link{Image2}.
 #' @param offset the offset of color from background, (0, 1).
 #' @param objectSizeRange numeric(2). object size range in pixel.
 #' @param size Brush size, see \link[EBImage:makeBrush]{makeBrush}.
@@ -40,7 +40,7 @@ detectObjects <- function(img, offset=.05, objectSizeRange=c(10, 1000),
 }
 #' detect objects method2
 #' @description detect object
-#' @param img an object of \link[EBImage:Image-class]{Image} of \link{Image2}.
+#' @param img an object of \link[EBImage:Image-class]{Image} or \link{Image2}.
 #' @param objectSizeRange numeric(2). object size range in pixel.
 #' @param offset,w,h offset,w,h for \link[EBImage:thresh]{thresh}
 #' @param size Brush size, see \link[EBImage:makeBrush]{makeBrush}.
@@ -93,7 +93,7 @@ filterBySize <- function(nmask, objectSizeRange=c(10, 1000)){
 }
 #' detect objects method3
 #' @description detect object, good for dense objects.
-#' @param img an object of \link[EBImage:Image-class]{Image} of \link{Image2}.
+#' @param img an object of \link[EBImage:Image-class]{Image} or \link{Image2}.
 #' @param offset,w,h offset,w,h for \link[EBImage:thresh]{thresh}
 #' @param objectSizeRange numeric(2). object size range in pixel.
 #' @param size see \link[EBImage:makeBrush]{makeBrush}
