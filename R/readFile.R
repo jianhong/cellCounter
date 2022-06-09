@@ -4,26 +4,29 @@
 #' @param channel the channel to be read in
 #' @param Image2mode return should be object of Image or Image2?
 #' @import EBImage
-#' @import RBioFormats
 #' @export
 #' @return an Image or Image2
 #' @author Jianhong Ou, Yanchao Han
-#' @examples 
+#' @examples
 #' readFile(system.file("extdata", "sample.tiff", package="cellCounter"))
-#' 
+#'
 readFile <- function(file, channel=NULL, Image2mode=FALSE){
   stopifnot(file.exists(file))
   imageFilename <- basename(file)
   ## read image
   if(endsWith(file, ".czi")){
-    m <- read.metadata(file = file)$globalMetadata
+    if(!requireNamespace("RBioFormats")){
+      stop("RBioFormats package is required for loading czi files.",
+           "Please try to install RBioFormats from https://github.com/aoles/RBioFormats")
+    }
+    m <- RBioFormats::read.metadata(file = file)$globalMetadata
     imageFilename <- m[["Information|Document|Title #1"]]
     setsubset <- FALSE
     if(!is.null(channel)){
       channelAvailable <-
         m[startsWith(names(m), "Experiment|AcquisitionBlock|MultiTrackSetup|TrackSetup|Detector|Color")]
-      names(channelAvailable) <- 
-        sub("Experiment|AcquisitionBlock|MultiTrackSetup|TrackSetup|Detector|Color #", "", 
+      names(channelAvailable) <-
+        sub("Experiment|AcquisitionBlock|MultiTrackSetup|TrackSetup|Detector|Color #", "",
             names(channelAvailable), fixed = TRUE)
       colorMap <- c("red"="#FF0000", "green"="#00FF00", "blue"="#0000FF")
       channelAvailable <- unlist(channelAvailable)
@@ -33,14 +36,14 @@ readFile <- function(file, channel=NULL, Image2mode=FALSE){
       }
     }
     if(setsubset){
-      img <- read.image(file = file,
-                        proprietary.metadata = FALSE,
-                        normalize = TRUE,
-                        subset = subset)
+      img <- RBioFormats::read.image(file = file,
+                                     proprietary.metadata = FALSE,
+                                     normalize = TRUE,
+                                     subset = subset)
     }else{
-      img <- read.image(file = file,
-                        proprietary.metadata = FALSE,
-                        normalize = TRUE)
+      img <- RBioFormats::read.image(file = file,
+                                     proprietary.metadata = FALSE,
+                                     normalize = TRUE)
     }
   }else{
     img <- readImage(file)

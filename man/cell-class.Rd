@@ -4,7 +4,6 @@
 \name{cell-class}
 \alias{cell-class}
 \alias{cell}
-\alias{cell}
 \alias{parent}
 \alias{parent,cell-method}
 \alias{parent<-}
@@ -39,16 +38,6 @@ offsprings(x) <- value
 }
 \description{
 An object of class cell represents a cell
-
-Method parent
-
-Method parent<-
-
-Method offsprings
-
-Method offsprings<-
-
-Mothod $
 }
 \section{Slots}{
 

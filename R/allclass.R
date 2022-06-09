@@ -15,13 +15,13 @@ setClassUnion("numericOrNULL",members=c("numeric", "NULL"))
 #' @import methods
 #' @exportClass cell
 #' @author Jianhong Ou
-#' @examples 
+#' @examples
 #' cell()
-#' 
-setClass("cell", 
-         representation(cx="numeric", cy="numeric", 
-                        xs="numericOrNULL", ys="numericOrNULL", 
-                        id="numeric", 
+#'
+setClass("cell",
+         representation(cx="numeric", cy="numeric",
+                        xs="numericOrNULL", ys="numericOrNULL",
+                        id="numeric",
                         parent="numericOrNULL",
                         offsprings="numericOrNULL",
                         frame="numeric",
@@ -91,7 +91,7 @@ setMethod("$", "cell", function(x, name) slot(x, name))
 #' @description An object of class Image2 represents a Image with HDF5Array
 #' @aliases Image2
 #' @rdname Image2-class
-#' @slot seed,index,delayed_ops see \link[DelayedArray:DelayedArray-class]{DelayedArray}
+#' @slot seed see \link[DelayedArray:DelayedArray-class]{DelayedArray}
 #' @slot colormode colormode of the image.
 #' @import methods
 #' @import EBImage
@@ -101,10 +101,10 @@ setMethod("$", "cell", function(x, name) slot(x, name))
 #' @author Jianhong Ou
 #' @examples
 #' library(EBImage)
-#' img <- readImage(system.file("extdata", "low.jpg", package="cellCounter")) 
+#' img <- readImage(system.file("extdata", "low.jpg", package="cellCounter"))
 #' Image2(img)
-#' 
-setClass("Image2", 
+#'
+setClass("Image2",
          representation(colormode="integer"),
          prototype(colormode=0L),
          contains = 'DelayedArray')
@@ -118,7 +118,7 @@ is.Image2 <- function(x){
 #' @export
 Image2 <- function(img){
   stopifnot(is(img, "Image"))
-  new("Image2", as(imageData(img), "HDF5Array"), 
+  new("Image2", as(imageData(img), "HDF5Array"),
       colormode=colorMode(img))
 }
 #' @rdname Image2-class
@@ -252,7 +252,7 @@ readListImg <- function(files, ...){
 #' @param imgs a list of \link{Image2}
 #' @import HDF5Array
 #' @import DelayedArray
-#' @return a object of \link{Image2} 
+#' @return a object of \link{Image2}
 condense <- function(imgs){
   stopifnot(is.list(imgs))
   if(length(imgs)<2) return(imgs)

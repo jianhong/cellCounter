@@ -4,8 +4,10 @@
 \alias{labeledImage2Cell}
 \title{convert the labeled imaged to a list of cell object}
 \usage{
-labeledImage2Cell(imgs, colorChannel = c(red = "#FF0000", green = "#00FF00",
-  blue = "#0000FF"))
+labeledImage2Cell(
+  imgs,
+  colorChannel = c(red = "#FF0000", green = "#00FF00", blue = "#0000FF")
+)
 }
 \arguments{
 \item{imgs}{a list of \link[EBImage:Image-class]{Image} or \link{Image2}. It should be output of detectObjects functions.}

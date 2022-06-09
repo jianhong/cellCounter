@@ -4,9 +4,14 @@
 \alias{changeCellSize}
 \title{changeCellSize}
 \usage{
-changeCellSize(img, changeCellSize_direction = c("erode", "dilate"),
+changeCellSize(
+  img,
+  changeCellSize_direction = c("erode", "dilate"),
   changeCellSize_targetChannel = c("red", "green", "blue"),
-  changeCellSize_size = 3, changeCellSize_shape = "disc", ...)
+  changeCellSize_size = 3,
+  changeCellSize_shape = "disc",
+  ...
+)
 }
 \arguments{
 \item{img}{an object of \link[EBImage:Image-class]{Image}.}

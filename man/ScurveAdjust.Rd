@@ -4,8 +4,13 @@
 \alias{ScurveAdjust}
 \title{ScurveAdjust}
 \usage{
-ScurveAdjust(img, ScurveAdjust_k = 10, ScurveAdjust_L = 1,
-  ScurveAdjust_x0 = 0.5, ...)
+ScurveAdjust(
+  img,
+  ScurveAdjust_k = 10,
+  ScurveAdjust_L = 1,
+  ScurveAdjust_x0 = 0.5,
+  ...
+)
 }
 \arguments{
 \item{img}{an object of \link[EBImage:Image-class]{Image}.}

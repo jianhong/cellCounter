@@ -4,8 +4,15 @@
 \alias{detectObjects}
 \title{detect objects method1}
 \usage{
-detectObjects(img, offset = 0.05, objectSizeRange = c(10, 1000),
-  size = 31, tolerance = 1, ext = 1, ...)
+detectObjects(
+  img,
+  offset = 0.05,
+  objectSizeRange = c(10, 1000),
+  size = 31,
+  tolerance = 1,
+  ext = 1,
+  ...
+)
 }
 \arguments{
 \item{img}{an object of \link[EBImage:Image-class]{Image} or \link{Image2}.}

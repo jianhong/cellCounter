@@ -9,20 +9,16 @@
 # author: Jianhong Ou
 
 if(!"EBImage" %in% rownames(installed.packages())){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("EBImage", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+  BiocManager::install("EBImage", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
 }
 if(!"DT" %in% rownames(installed.packages())){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("DT", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+  BiocManager::install("DT", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
 }
 if(!"scales" %in% rownames(installed.packages())){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("scales", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+  BiocManager::install("scales", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
 }
 if(!"XML" %in% rownames(installed.packages())){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("XML", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
+  BiocManager::install("XML", suppressUpdates = TRUE, suppressAutoUpdate = TRUE)
 }
 # if(!"shinyjs" %in% rownames(installed.packages())){
 #   source("https://bioconductor.org/biocLite.R")
@@ -37,14 +33,14 @@ library(XML)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
+
    # Application title
    titlePanel("cell counter"),
-   
-   # Sidebar with a slider input for number of bins 
+
+   # Sidebar with a slider input for number of bins
    sidebarLayout(
       sidebarPanel(
-        
+
         tags$div(HTML("<h3>Howto</h3>",
                       "<p><ol><li>split or merge the color channel in fuji/imageJ.</li>",
                       "<li>save as gif.</li>",
@@ -52,7 +48,7 @@ ui <- fluidPage(
                       "<li>set the parameters before upload the file.</li>",
                       "<li>upload the tiff.</li></ol></p>",
                       "<hr>")),
-        
+
         fileInput("f",
                   "Choose tiff file",
                   multiple = FALSE,
@@ -103,7 +99,7 @@ ui <- fluidPage(
         submitButton("recount", icon("refresh")),
         downloadButton("downloadData", "Download", "disabled")
       ),
-      
+
       # Show a plot of the generated distribution
       mainPanel(
           tags$div(EBImage::displayOutput('outputviewer', width = "100%", height="600px")),
@@ -112,7 +108,7 @@ ui <- fluidPage(
    )
 )
 
-options(shiny.maxRequestSize=500*1024^2) 
+options(shiny.maxRequestSize=500*1024^2)
 euc.dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
 
 # Define server logic required to draw a histogram
@@ -125,19 +121,19 @@ server <- function(input, output) {
       # Create a Progress object
       progress <- shiny::Progress$new()
       progress$set(message = "loading figure", value = 0)
-      
+
       f <- input$f$datapath
       img <- readImage(f)
-      
+
       progress$set(message = "convert to RGB mode", value = .1)
-      
+
       img <- toRGB(img)
       if(length(dim(img)>3)){
         if(dim(img)[3]>3){
           img <- img[, , 1:3, ]
         }
       }
-      
+
       progress$set(message = "adjust image", value = .2)
       if(input$GaussianBlur=="before"){
         img <- gblur(img, sigma = input$blurLevel)
@@ -150,7 +146,7 @@ server <- function(input, output) {
       }
       progress$set(message = "detectings cells", value = .3)
       sample <- channel(img, input$channel)
-      
+
       disc <- makeBrush(31, "disc")
       disc <- disc/sum(disc)
       sample_bg <- filter2(sample, disc)
@@ -168,8 +164,8 @@ server <- function(input, output) {
         progress$set(value = .5 + .2*i/numberOfFrames(nmask, type="render"), detail = paste("frame", i))
       }
       nmask2 <- combine(nmask2)
-      sample <- paintObjects(nmask2, img, 
-                             col = c(ifelse(input$channel=="red", "green", "red"), NA), 
+      sample <- paintObjects(nmask2, img,
+                             col = c(ifelse(input$channel=="red", "green", "red"), NA),
                              closed = TRUE)
       rm(img)
       rm(nmask)
@@ -208,7 +204,7 @@ server <- function(input, output) {
                 }
               }
             }
-            
+
             for(m in seq_along(checklist)){
               if(checklist[m]){
                 xml$addTag("Marker", close = FALSE)
@@ -256,7 +252,7 @@ server <- function(input, output) {
                     next
                   }
                 }
-              } 
+              }
               counts <- nrow(tbl.new) - countsInLastFrame
             }else{
               countsInLastFrame <- 0
@@ -266,20 +262,20 @@ server <- function(input, output) {
             if(sum(tbl.new[, "counts"]==0)>0){
               tbl.new[tbl.new[, "counts"]==0, "counts"] <- seq.int(sum(tbl.new[, "counts"]==0)) + lastCount
             }
-            cnt_tbl <- rbind(cnt_tbl, 
+            cnt_tbl <- rbind(cnt_tbl,
                              data.frame(frame  = i,
                                         counts = counts,
                                         countsInLastFrame = countsInLastFrame,
                                         cumsum = lastCount + counts,
-                                        x      = paste(round(tbl.new[, "m.cx"], digits = 1), collapse = ";"), 
+                                        x      = paste(round(tbl.new[, "m.cx"], digits = 1), collapse = ";"),
                                         y      = paste(round(tbl.new[, "m.cy"], digits = 1), collapse = ";")))
             tbl.old <- tbl.new
             ## paste number
             tmpfile <- tempfile()
             png(filename = tmpfile, width = nrow(sample), height = ncol(sample))
             display(getFrame(sample, i, type="render"), method = "raster")
-            text(tbl.new[, "m.cx"], tbl.new[, "m.cy"], 
-                 labels = tbl.new[, "counts"], 
+            text(tbl.new[, "m.cx"], tbl.new[, "m.cy"],
+                 labels = tbl.new[, "counts"],
                  col = ifelse(tbl.new[, "counts"]>lastCount, "orange", "white"))
             dev.off()
             sample2[[i]] <- readImage(tmpfile, type = "png")[, , 1:3]
@@ -292,7 +288,7 @@ server <- function(input, output) {
         sample <- combine(sample2)
         rm(sample2)
       }
-      
+
       rm(nmask2)
       gc(reset=TRUE)
       # Close the progress when this reactive exits (even if there's an error)
@@ -301,11 +297,11 @@ server <- function(input, output) {
     }else{
       sample <- readImage("Blank.png")
     }
-    
+
     output$countTbl <- DT::renderDT(cnt_tbl, options = list(
       pageLength = 10
     ))
-    
+
     return(display(sample, method = "browser"))
   })
   output$downloadData <- downloadHandler(
@@ -317,6 +313,6 @@ server <- function(input, output) {
   )
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
 

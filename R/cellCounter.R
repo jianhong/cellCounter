@@ -19,19 +19,19 @@
 #' @import XML
 #' @export
 #' @author Jianhong Ou
-#' @examples 
+#' @examples
 #' library(EBImage)
 #' library(scales)
 #' library(XML)
-#' library(rJava)
-#' .jinit(parameters=c("-Xms1g","-Xmx4g"))
-#' library(RBioFormats) ## to support czi file, 
+#' ##library(rJava)
+#' ##.jinit(parameters=c("-Xms1g","-Xmx4g"))
+#' ##library(RBioFormats) ## to support czi file,
 #' ## try to install by devtools::install_github("aoles/RBioFormats")
-#' cellCounter(system.file("extdata", "sample.tiff", package="cellCounter"), 
+#' cellCounter(system.file("extdata", "sample.tiff", package="cellCounter"),
 #' xmlfile="sample.xml", imageFilename="sample.czi")
-#' 
-cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 1000), 
-                        distanceSameCell=10, 
+#'
+cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 1000),
+                        distanceSameCell=10,
                         xmlfile=sub("\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
                         imageFilename=sub("\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
                         counterType=c(prenew=5, new=4, old=6), zvalue=fixZvalue,
@@ -60,7 +60,7 @@ cellCounter <- function(file, channel="green", offset=0.05, cellSizeRange=c(20, 
   img <- detectFun(img, offset=offset, cellSizeRange=cellSizeRange, ...)
   ## coutput the xml
   if(!silence) message("output xml file")
-  saveCountXML(img, xmlfile = xmlfile, file = imageFilename, distance = distanceSameCell, 
+  saveCountXML(img, xmlfile = xmlfile, file = imageFilename, distance = distanceSameCell,
                counterType=counterType, zv=zvalue, ...)
 }
 

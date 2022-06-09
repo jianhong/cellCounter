@@ -5,16 +5,13 @@
 \alias{Image2-class}
 \alias{Image2}
 \alias{is.Image2}
-\alias{Image2}
 \alias{readImage2}
 \alias{writeImage2}
 \alias{toImage}
 \alias{toImage,Image2-method}
 \alias{imageData}
 \alias{imageData,Image2-method}
-\alias{imageData,Image2-method}
 \alias{imageData<-}
-\alias{imageData<-,Image2-method}
 \alias{imageData<-,Image2-method}
 \alias{colorMode}
 \alias{colorMode,Image2-method}
@@ -80,32 +77,18 @@ display(x, method, frames, ...)
 }
 \description{
 An object of class Image2 represents a Image with HDF5Array
-
-Method imageData
-
-Method imageData<-
-
-Method colorMode
-
-Method colorMode<-
-
-Method channel
-
-Method show
-
-Method display
 }
 \section{Slots}{
 
 \describe{
-\item{\code{seed,index,delayed_ops}}{see \link[DelayedArray:DelayedArray-class]{DelayedArray}}
+\item{\code{seed}}{see \link[DelayedArray:DelayedArray-class]{DelayedArray}}
 
 \item{\code{colormode}}{colormode of the image.}
 }}
 
 \examples{
 library(EBImage)
-img <- readImage(system.file("extdata", "low.jpg", package="cellCounter")) 
+img <- readImage(system.file("extdata", "low.jpg", package="cellCounter"))
 Image2(img)
 
 }

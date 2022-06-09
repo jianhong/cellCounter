@@ -4,13 +4,22 @@
 \alias{cellCounter}
 \title{cell counter}
 \usage{
-cellCounter(file, channel = "green", offset = 0.05, cellSizeRange = c(20,
-  1000), distanceSameCell = 10, xmlfile = sub("\\\\.(tiff|tif)$",
-  ".cellCounter.xml", file, ignore.case = TRUE),
-  imageFilename = sub("\\\\.(tiff|tif)$", ".czi", basename(file), ignore.case
-  = TRUE), counterType = c(prenew = 5, new = 4, old = 6),
-  zvalue = fixZvalue, adjustPipeline = c(GaussianBlur, ScurveAdjust),
-  detectFun = detectObjects, saveAdjustImage = NULL, silence = FALSE, ...)
+cellCounter(
+  file,
+  channel = "green",
+  offset = 0.05,
+  cellSizeRange = c(20, 1000),
+  distanceSameCell = 10,
+  xmlfile = sub("\\\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
+  imageFilename = sub("\\\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
+  counterType = c(prenew = 5, new = 4, old = 6),
+  zvalue = fixZvalue,
+  adjustPipeline = c(GaussianBlur, ScurveAdjust),
+  detectFun = detectObjects,
+  saveAdjustImage = NULL,
+  silence = FALSE,
+  ...
+)
 }
 \arguments{
 \item{file}{tiff file name}
@@ -48,11 +57,11 @@ count the cells from a z-stack tiff or czi file and output xml for imageJ
 library(EBImage)
 library(scales)
 library(XML)
-library(rJava)
-.jinit(parameters=c("-Xms1g","-Xmx4g"))
-library(RBioFormats) ## to support czi file, 
+##library(rJava)
+##.jinit(parameters=c("-Xms1g","-Xmx4g"))
+##library(RBioFormats) ## to support czi file,
 ## try to install by devtools::install_github("aoles/RBioFormats")
-cellCounter(system.file("extdata", "sample.tiff", package="cellCounter"), 
+cellCounter(system.file("extdata", "sample.tiff", package="cellCounter"),
 xmlfile="sample.xml", imageFilename="sample.czi")
 
 }

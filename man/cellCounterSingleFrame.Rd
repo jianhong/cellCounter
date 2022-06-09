@@ -4,12 +4,21 @@
 \alias{cellCounterSingleFrame}
 \title{cell counter}
 \usage{
-cellCounterSingleFrame(file, channels = c("red", "green", "blue"), formula,
-  maskValue = 0.3, offset = 0.1, cellSizeRange = c(10, 1000),
-  xmlfile = sub("\\\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case =
-  TRUE), imageFilename = sub("\\\\.(tiff|tif)$", ".czi", basename(file),
-  ignore.case = TRUE), adjustPipeline = c(ScurveAdjust),
-  detectFun = detectObjects, saveAdjustImage = NULL, silence = FALSE, ...)
+cellCounterSingleFrame(
+  file,
+  channels = c("red", "green", "blue"),
+  formula,
+  maskValue = 0.3,
+  offset = 0.1,
+  cellSizeRange = c(10, 1000),
+  xmlfile = sub("\\\\.(tiff|tif)$", ".cellCounter.xml", file, ignore.case = TRUE),
+  imageFilename = sub("\\\\.(tiff|tif)$", ".czi", basename(file), ignore.case = TRUE),
+  adjustPipeline = c(ScurveAdjust),
+  detectFun = detectObjects,
+  saveAdjustImage = NULL,
+  silence = FALSE,
+  ...
+)
 }
 \arguments{
 \item{file}{tiff file name}
